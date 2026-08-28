@@ -4,6 +4,10 @@ CHANGELOG
 0.13
 ----
 
+ * Add `#[RequiresApproval]` attribute, `ApprovalManager`, `ApprovalPolicyInterface`, and `ApprovalPendingResult` for Human-in-the-Loop (HITL) tool execution
+ * Add `ExecutionCheckpoint`, `CheckpointStoreInterface`, `InMemoryCheckpointStore`, `CheckpointSignerInterface`, and `CheckpointSigner` for state suspension and durable resumption
+ * Add `AgentInterface::resume()` and `Agent::resume()` to resume suspended agent runs with `ApprovalDecision` (approve, reject, modify)
+ * Add `ToolApprovalRequestedEvent` and `ToolApprovalResolvedEvent`
  * `ValidateToolCallArgumentsListener` now also validates scalar and array tool parameters carrying a `#[Schema]` attribute (`pattern`, `minLength`/`maxLength`, `minimum`/`maximum`/`exclusiveMinimum`/`exclusiveMaximum`, `multipleOf`, `minItems`/`maxItems`, `uniqueItems`, `enum`, `const`), not only object parameters validated through Symfony Validator constraints
  * [BC BREAK] Remove `Toolbox\AgentProcessor`; tool calling is now driven by the `Agent` itself, configured with the `toolbox`, `toolExecutor`, `maxToolCalls`, `excludeToolMessages`, `includeSources` and `eventDispatcher` constructor arguments
  * Add `Toolbox\ToolExecutorInterface` and its default `SequentialToolExecutor` implementation, making the execution of the requested tool calls replaceable

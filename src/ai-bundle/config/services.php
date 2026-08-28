@@ -11,13 +11,21 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Symfony\AI\Agent\Approval\ApprovalManager;
+use Symfony\AI\Agent\Approval\ApprovalManagerInterface;
+use Symfony\AI\Agent\Approval\Checkpoint\CheckpointSigner;
+use Symfony\AI\Agent\Approval\Checkpoint\CheckpointSignerInterface;
+use Symfony\AI\Agent\Approval\Checkpoint\CheckpointStoreInterface;
+use Symfony\AI\Agent\Approval\Checkpoint\InMemoryCheckpointStore;
 use Symfony\AI\Agent\Toolbox\Event\ToolCallArgumentsResolved;
 use Symfony\AI\Agent\Toolbox\EventListener\ValidateToolCallArgumentsListener;
 use Symfony\AI\Agent\Toolbox\Toolbox;
 use Symfony\AI\Agent\Toolbox\ToolCallArgumentResolver;
 use Symfony\AI\Agent\Toolbox\ToolFactory\ReflectionToolFactory;
 use Symfony\AI\Agent\Toolbox\ToolResultConverter;
+use Symfony\AI\AiBundle\Command\AgentApproveCommand;
 use Symfony\AI\AiBundle\Command\AgentCallCommand;
+use Symfony\AI\AiBundle\Command\AgentListPendingCommand;
 use Symfony\AI\AiBundle\Command\PlatformInvokeCommand;
 use Symfony\AI\AiBundle\Profiler\DataCollector;
 use Symfony\AI\AiBundle\Security\EventListener\IsGrantedToolAttributeListener;
@@ -276,7 +284,35 @@ return static function (ContainerConfigurator $container): void {
         ->set('ai.chat.message_bag.normalizer', MessageNormalizer::class)
             ->tag('serializer.normalizer')
 
+        // approval & human-in-the-loop
+        ->set('ai.approval.signer', CheckpointSigner::class)
+            ->args([
+                param('kernel.secret'),
+            ])
+        ->alias(CheckpointSignerInterface::class, 'ai.approval.signer')
+        ->set('ai.approval.store.memory', InMemoryCheckpointStore::class)
+        ->alias(CheckpointStoreInterface::class, 'ai.approval.store.memory')
+        ->set('ai.approval.manager', ApprovalManager::class)
+            ->args([
+                tagged_iterator('ai.approval_policy'),
+                service('ai.approval.store.memory')->nullOnInvalid(),
+                service('ai.approval.signer')->nullOnInvalid(),
+            ])
+        ->alias(ApprovalManagerInterface::class, 'ai.approval.manager')
+
         // commands
+        ->set('ai.command.agent_list_pending', AgentListPendingCommand::class)
+            ->args([
+                service(CheckpointStoreInterface::class)->nullOnInvalid(),
+            ])
+            ->tag('console.command')
+        ->set('ai.command.agent_approve', AgentApproveCommand::class)
+            ->args([
+                tagged_locator('ai.agent', 'name'),
+                service(CheckpointStoreInterface::class)->nullOnInvalid(),
+                service(CheckpointSignerInterface::class)->nullOnInvalid(),
+            ])
+            ->tag('console.command')
         ->set('ai.command.chat', AgentCallCommand::class)
             ->args([
                 tagged_locator('ai.agent', 'name'),

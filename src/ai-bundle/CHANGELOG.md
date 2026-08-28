@@ -6,6 +6,9 @@ CHANGELOG
 
  * Add support for template variables in file prompts
  * Add an `embedding_function` option to the `chromadb` store, referencing a service implementing `Codewithkyrian\ChromaDB\Embeddings\EmbeddingFunction`, so a bundle-configured store can serve a `TextQuery`
+ * Add `ai:agent:list-pending` command to view pending tool approval requests
+ * Add `ai:agent:approve` command to review, approve, reject, or modify pending tool executions
+ * Autoconfigure `ApprovalPolicyInterface` with `ai.approval_policy` tag and register approval signer, store, and manager services
 
 0.11
 ----

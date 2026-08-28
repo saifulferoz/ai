@@ -17,6 +17,7 @@ use Google\Auth\FetchAuthTokenInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\AI\Agent\Agent;
 use Symfony\AI\Agent\AgentInterface;
+use Symfony\AI\Agent\Approval\ApprovalPolicyInterface;
 use Symfony\AI\Agent\Attribute\AsInputProcessor;
 use Symfony\AI\Agent\Attribute\AsOutputProcessor;
 use Symfony\AI\Agent\InputProcessor\SystemPromptInputProcessor;
@@ -358,6 +359,8 @@ final class AiBundle extends AbstractBundle
                 ->addTag('ai.agent.input_processor', ['tagged_by' => 'interface']);
             $builder->registerForAutoconfiguration(OutputProcessorInterface::class)
                 ->addTag('ai.agent.output_processor', ['tagged_by' => 'interface']);
+            $builder->registerForAutoconfiguration(ApprovalPolicyInterface::class)
+                ->addTag('ai.approval_policy');
         }
 
         $builder->registerForAutoconfiguration(ModelClientInterface::class)
@@ -1278,7 +1281,8 @@ final class AiBundle extends AbstractBundle
                 ->setArgument('$maxToolCalls', $config['max_tool_calls'])
                 ->setArgument('$excludeToolMessages', $config['exclude_tool_messages'])
                 ->setArgument('$includeSources', $config['include_sources'])
-                ->setArgument('$eventDispatcher', new Reference('event_dispatcher', ContainerInterface::NULL_ON_INVALID_REFERENCE));
+                ->setArgument('$eventDispatcher', new Reference('event_dispatcher', ContainerInterface::NULL_ON_INVALID_REFERENCE))
+                ->setArgument('$approvalManager', new Reference('ai.approval.manager', ContainerInterface::NULL_ON_INVALID_REFERENCE));
 
             // Define specific list of tools if are explicitly defined
             if ([] !== $config['tools']['services']) {
